@@ -1,0 +1,16 @@
+{
+  "name": "process-automation",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:gui": "npm --workspace apps/gui run dev",
+    "build:flow": "npm --workspace packages/flow-core run build"
+  },
+  "dependencies": {
+    "handlebars": "^4.7.8"
+  }
+}
