@@ -259,6 +259,74 @@ export default function App() {
   URL.revokeObjectURL(url);
 };
 
+const saveFlowToFile = () => {
+  const flowData = JSON.stringify(flow, null, 2);
+  const blob = new Blob([flowData], {
+    type: "application/json;charset=utf-8",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "flow.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
+
+const loadFlowFromFile = (file: File) => {
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result ?? ""));
+
+      const loadedNodes: Node<FlowNodeData>[] = parsed.nodes.map(
+        (node: {
+          id: string;
+          type: NodeType;
+          position: { x: number; y: number };
+          props?: Record<string, unknown>;
+        }) => ({
+          id: node.id,
+          type: "flowNode",
+          position: node.position,
+          data: {
+            label: node.type,
+            nodeType: node.type,
+            props: node.props ?? {},
+          },
+        })
+      );
+
+      const loadedEdges: Edge[] = parsed.edges.map(
+        (edge: {
+          id: string;
+          source: string;
+          target: string;
+          sourceHandle?: string;
+        }) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle,
+        })
+      );
+
+      setNodes(loadedNodes);
+      setEdges(loadedEdges);
+      setSelectedNodeId(null);
+      setLog("Flujo cargado correctamente.");
+    } catch {
+      setLog("No se pudo cargar el flujo.");
+    }
+  };
+
+  reader.readAsText(file);
+};
+
+const fileInputId = "load-flow-input";
+
   return (
   <div
     style={{
@@ -292,6 +360,40 @@ export default function App() {
       <button onClick={runScript}>Run</button>
 
       <hr />
+
+      <button onClick={saveFlowToFile} style={{ width: "100%", marginBottom: 8 }}>
+        Guardar flujo
+      </button>
+
+      <label
+        htmlFor={fileInputId}
+        style={{
+          display: "block",
+          width: "100%",
+          padding: "6px 10px",
+          background: "#eee",
+          color: "#111",
+          textAlign: "center",
+          borderRadius: 4,
+          cursor: "pointer",
+        }}
+      >
+        Cargar flujo
+      </label>
+
+      <input
+        id={fileInputId}
+        type="file"
+        accept=".json"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          loadFlowFromFile(file);
+        }}
+      />
+
+            <hr />
 
       <h3>Agregar nodo</h3>
       <button onClick={() => addNode("readFile")}>+ readFile</button>
@@ -416,28 +518,28 @@ export default function App() {
           )}
 
           {selectedNode.data.nodeType === "sendEmail" && (
-            <>
-              <label>To</label>
-              <input
-                type="text"
-                value={String(selectedNode.data.props.to ?? "")}
-                onChange={(e) =>
-                  updateSelectedNodeProps({ to: e.target.value })
-                }
-                style={{ width: "100%", marginBottom: 10 }}
-              />
+              <>
+                <label>To</label>
+                <input
+                  type="text"
+                  value={String(selectedNode.data.props.to ?? "")}
+                  onChange={(e) =>
+                    updateSelectedNodeProps({ to: e.target.value })
+                  }
+                  style={{ width: "100%", marginBottom: 10 }}
+                />
 
-              <label>Subject</label>
-              <input
-                type="text"
-                value={String(selectedNode.data.props.subject ?? "")}
-                onChange={(e) =>
-                  updateSelectedNodeProps({ subject: e.target.value })
-                }
-                style={{ width: "100%", marginBottom: 10 }}
-              />
-            </>
-          )}
+                <label>Subject</label>
+                <input
+                  type="text"
+                  value={String(selectedNode.data.props.subject ?? "")}
+                  onChange={(e) =>
+                    updateSelectedNodeProps({ subject: e.target.value })
+                  }
+                  style={{ width: "100%", marginBottom: 10 }}
+                />
+              </>
+            )}
         </div>
       )}
     </div>

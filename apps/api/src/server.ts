@@ -1,4 +1,6 @@
+import "dotenv/config";
 import { runGeneratedScript } from "./runner.js";
+import { executeFlow } from "./flowExcutor.js";
 import express from "express";
 import cors from "cors";
 import { validateFlow, generateScript, type Flow } from "flow-core";
@@ -42,10 +44,10 @@ app.post("/api/run", async (req, res) => {
     }
 
     const code = generateScript(flow, target ?? "python");
-    const execution = await runGeneratedScript(code, target ?? "python");
+    const execution = await executeFlow(flow);
 
     res.json({
-      ok: execution.ok,
+      ok: true,
       code,
       execution,
     });
